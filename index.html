@@ -155,15 +155,20 @@ header{border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:
 [data-theme="dark"] .tbar-fill{box-shadow:0 0 8px rgba(200,245,60,.5);}
 
 /* ── MAIN ── */
-main{max-width:980px;margin:0 auto;padding:24px 20px 60px;position:relative;z-index:10;}
+main{max-width:860px;margin:0 auto;padding:24px 20px 60px;position:relative;z-index:10;}
 .game-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:6px;}
 .game-top-hint{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);}
 .progress-text{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);}
 .progress-text strong{color:var(--green);}
 
+/* Side-by-side panels — stretch keeps both panes the same height */
+.panels{display:flex;gap:12px;align-items:stretch;}
+
 /* Pool */
-.pool-wrap,.targets-wrap{border:1px solid var(--border);background:var(--surface);overflow:hidden;}
-.targets-wrap{margin-top:14px;}
+.pool-wrap,.targets-wrap{border:1px solid var(--border);background:var(--surface);overflow:hidden;display:flex;flex-direction:column;}
+.pool-wrap{flex:0 0 42%;min-width:0;}
+.targets-wrap{flex:1;min-width:0;}
+#poolRows,#targetRows{flex:1;overflow-y:auto;}
 .pool-header,.targets-header{padding:8px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .pool-header-label,.targets-header-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);}
 .pool-header-hint{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.1em;color:var(--dim);}
@@ -176,6 +181,11 @@ main{max-width:980px;margin:0 auto;padding:24px 20px 60px;position:relative;z-in
 .tile{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;padding:6px 10px;background:var(--tile-bg);border:1px solid var(--tile-bdr);color:var(--text);cursor:pointer;user-select:none;transition:all .12s;}
 .tile:hover{background:var(--tile-hvr);border-color:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 14px var(--shadow);}
 .tile.selected{background:var(--accent-g);border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 4px 18px rgba(200,245,60,.18);transform:translateY(-2px);}
+.tile.dragging{opacity:.35;transform:scale(0.96);}
+
+/* Drag-and-drop targets */
+.target-slot.drag-over{border-style:solid!important;border-color:var(--accent)!important;background:var(--accent-g)!important;transform:scale(1.04);}
+.pool-row.drop-target{background:var(--accent-g);}
 
 /* Target rows */
 .target-row{display:flex;align-items:center;min-height:50px;border-bottom:1px solid var(--border);padding:7px 14px;gap:10px;transition:background .2s;}
@@ -222,6 +232,10 @@ main{max-width:980px;margin:0 auto;padding:24px 20px 60px;position:relative;z-in
   .share-btn{font-size:9px;padding:7px 10px;}
   .game-top{flex-direction:column;align-items:flex-start;}
   .sel-status{flex-direction:column;align-items:flex-start;gap:4px;}
+  /* Stack panels on mobile */
+  .panels{flex-direction:column;gap:10px;}
+  .pool-wrap{flex:none;width:100%;}
+  .targets-wrap{flex:none;width:100%;}
 }
 @media(max-width:400px){
   .hud{gap:8px;}
@@ -293,18 +307,20 @@ main{max-width:980px;margin:0 auto;padding:24px 20px 60px;position:relative;z-in
     <span class="game-top-hint">Select a fragment · place it into a word slot below</span>
     <span class="progress-text">Solved: <strong id="solvedCount">0</strong> / 10</span>
   </div>
-  <div class="pool-wrap">
-    <div class="pool-header">
-      <span class="pool-header-label">Fragment Pool</span>
-      <span class="pool-header-hint">All word fragments — scrambled across rows</span>
+  <div class="panels">
+    <div class="pool-wrap">
+      <div class="pool-header">
+        <span class="pool-header-label">Fragment Pool</span>
+        <span class="pool-header-hint">Scrambled across rows</span>
+      </div>
+      <div id="poolRows"></div>
     </div>
-    <div id="poolRows"></div>
-  </div>
-  <div class="targets-wrap">
-    <div class="targets-header">
-      <span class="targets-header-label">Word Assembly — sorted shortest to longest</span>
+    <div class="targets-wrap">
+      <div class="targets-header">
+        <span class="targets-header-label">Word Assembly — shortest to longest</span>
+      </div>
+      <div id="targetRows"></div>
     </div>
-    <div id="targetRows"></div>
   </div>
   <div class="sel-status" id="selStatus">
     <span class="sel-hint">Click any fragment in the pool to select it, then click a slot to place it</span>
@@ -484,6 +500,7 @@ let poolRows    = [];
 let targetSlots = [];
 let solvedWords = new Set();
 let selection   = null;
+let dragState   = null;   // { source:'pool'|'target', fragId, wordIdx?, slotIdx? }
 let timeLeft    = 600;
 let timerRef    = null;
 let gameActive  = false;
@@ -520,6 +537,7 @@ function initGame() {
 
   solvedWords.clear();
   selection  = null;
+  dragState  = null;
   gameActive = true;
   timeLeft   = 600;
 
@@ -553,8 +571,35 @@ function renderPool() {
       const tile  = document.createElement('div');
       tile.className   = 'tile' + (isSel ? ' selected' : '');
       tile.textContent = frag.text;
-      tile.addEventListener('click', () => onPoolTileClick(fid));
+      tile.draggable   = true;
+      tile.addEventListener('click',     () => onPoolTileClick(fid));
+      tile.addEventListener('dragstart', e => {
+        dragState = { source: 'pool', fragId: fid };
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', fid);
+        requestAnimationFrame(() => tile.classList.add('dragging'));
+      });
+      tile.addEventListener('dragend', () => {
+        tile.classList.remove('dragging');
+        dragState = null;
+        document.querySelectorAll('.drag-over,.drop-target').forEach(el => el.classList.remove('drag-over','drop-target'));
+      });
       wrap.appendChild(tile);
+    });
+
+    // Allow dragging a target-sourced frag back into the pool row
+    row.addEventListener('dragover', e => {
+      if (!dragState || dragState.source !== 'target') return;
+      e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+      row.classList.add('drop-target');
+    });
+    row.addEventListener('dragleave', () => row.classList.remove('drop-target'));
+    row.addEventListener('drop', e => {
+      e.preventDefault();
+      row.classList.remove('drop-target');
+      if (!dragState || dragState.source !== 'target') return;
+      returnToPool(dragState.wordIdx, dragState.slotIdx);
+      dragState = null;
     });
 
     row.appendChild(wrap);
@@ -593,13 +638,33 @@ function renderTargets() {
       } else if (frag) {
         slot.className   = 'target-slot filled' + (isSel ? ' selected' : '');
         slot.textContent = frag.text;
-        slot.title       = 'Click to select · double-click to return to pool';
-        slot.addEventListener('click',    () => onTargetSlotClick(wi, si));
-        slot.addEventListener('dblclick', () => returnToPool(wi, si));
+        slot.title       = 'Click to select · double-click to return to pool · drag to move';
+        slot.draggable   = true;
+        slot.addEventListener('click',     () => onTargetSlotClick(wi, si));
+        slot.addEventListener('dblclick',  () => returnToPool(wi, si));
+        slot.addEventListener('dragstart', e => {
+          dragState = { source: 'target', fragId, wordIdx: wi, slotIdx: si };
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', fragId);
+          requestAnimationFrame(() => slot.classList.add('dragging'));
+        });
+        slot.addEventListener('dragend', () => {
+          slot.classList.remove('dragging');
+          dragState = null;
+          document.querySelectorAll('.drag-over,.drop-target').forEach(el => el.classList.remove('drag-over','drop-target'));
+        });
+        // Allow dropping onto a filled slot (swap)
+        slot.addEventListener('dragover',  e => { if (!dragState) return; e.preventDefault(); slot.classList.add('drag-over'); });
+        slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+        slot.addEventListener('drop',      e => { e.preventDefault(); slot.classList.remove('drag-over'); handleDropOnSlot(wi, si); });
       } else {
         slot.className   = 'target-slot empty';
         slot.textContent = '·';
-        slot.addEventListener('click', () => onTargetSlotClick(wi, si));
+        slot.addEventListener('click',     () => onTargetSlotClick(wi, si));
+        // Allow dropping onto an empty slot
+        slot.addEventListener('dragover',  e => { if (!dragState) return; e.preventDefault(); slot.classList.add('drag-over'); });
+        slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+        slot.addEventListener('drop',      e => { e.preventDefault(); slot.classList.remove('drag-over'); handleDropOnSlot(wi, si); });
       }
       slots.appendChild(slot);
     });
@@ -617,6 +682,31 @@ function renderTargets() {
 
     container.appendChild(row);
   });
+}
+
+// ══════════════════════════════════════════
+// DRAG-AND-DROP HANDLER
+// ══════════════════════════════════════════
+function handleDropOnSlot(wi, si) {
+  if (!dragState || !gameActive || solvedWords.has(wi)) return;
+
+  if (dragState.source === 'pool') {
+    // Place pool fragment into this slot (displace any existing frag back to pool implicitly)
+    targetSlots[wi][si] = dragState.fragId;
+    dragState = null;
+    checkWordSolved(wi);
+    updateHUD(); updateSelStatus(); renderPool(); renderTargets();
+
+  } else if (dragState.source === 'target') {
+    const { wordIdx: swi, slotIdx: ssi } = dragState;
+    if (swi === wi && ssi === si) { dragState = null; return; }
+    // Swap the two slots
+    [targetSlots[swi][ssi], targetSlots[wi][si]] = [targetSlots[wi][si], targetSlots[swi][ssi]];
+    dragState = null;
+    checkWordSolved(swi);
+    if (wi !== swi) checkWordSolved(wi);
+    updateHUD(); updateSelStatus(); renderPool(); renderTargets();
+  }
 }
 
 // ══════════════════════════════════════════
