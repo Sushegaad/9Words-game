@@ -4,6 +4,16 @@ A fast-paced, browser-based word puzzle where you reassemble 10 scrambled words 
 
 ---
 
+## 10 Words Game screenshots
+
+<p align="center">
+  <img src="10Words%20-%2001.png" alt="Start screen" width="32%">
+  <img src="10Words%20-%2002.png" alt="Game in progress" width="32%">
+  <img src="10Words%20-%2003.png" alt="Score screen" width="32%">
+</p>
+
+---
+
 ## How to Play
 
 1. **Select a fragment** from the Fragment Pool (click or drag).
@@ -49,47 +59,3 @@ If you solve all 10 words, your score equals the **seconds remaining** on the cl
 
 All CSS, JavaScript, and the word bank are inlined in `index.html`. There are no dependencies beyond a Google Fonts CDN link (the game is fully playable offline if the fonts fall back to system fonts).
 
----
-
-## Running Locally
-
-Just open `index.html` in any modern browser:
-
-```bash
-open index.html          # macOS
-start index.html         # Windows
-xdg-open index.html      # Linux
-```
-
-Or serve it with any static file server:
-
-```bash
-npx serve .
-python3 -m http.server 8080
-```
-
----
-
-## Publishing to GitHub Pages
-
-1. **Create a repository** at [github.com/new](https://github.com/new) (set it to Public).
-2. **Upload `index.html`** — click *"uploading an existing file"* on the empty repo page, drag the file in, and commit.
-3. **Enable GitHub Pages** — go to **Settings → Pages**, set Source to *"Deploy from a branch"*, select `main` / `(root)`, and click **Save**.
-4. Your game will be live at:
-   ```
-   https://<your-username>.github.io/<repo-name>/
-   ```
-
-No build tools, no CI pipeline needed — just the single HTML file.
-
----
-
-## Word Bank
-
-The puzzle draws from a curated bank of ~700 common English words, grouped by length (6–15 letters). Each hour, one word is selected per length group using a seeded shuffle, ensuring the same puzzle for all players in that hour window.
-
----
-
-## Browser Support
-
-Works in all modern browsers (Chrome, Firefox, Safari, Edge). Drag-and-drop uses the native HTML5 Drag and Drop API; click-based interaction is also fully supported as a fallback.
