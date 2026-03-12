@@ -7,13 +7,13 @@ A fast-paced, browser-based word puzzle where you reassemble 10 scrambled words 
 ## 10 Words Game screenshots
 
 <p align="left">
-  <img src="10Words%20-%2001.png" alt="Start screen">
+  <img src="10Words%20-%2001.png" alt="Game in progress">
 </p>
 <p align="left">
-  <img src="10Words%20-%2002.png" alt="Game in progress">
+  <img src="10Words%20-%2002.png" alt="Score screen">
 </p>
 <p align="left">
-  <img src="10Words%20-%2003.png" alt="Score screen">
+  <img src="10Words%20-%2003.png" alt="Start screen">
 </p>
 ---
 
@@ -53,12 +53,4 @@ If you solve all 10 words, your score equals the **seconds remaining** on the cl
 
 ---
 
-## File Structure
-
-```
-10Words/
-└── index.html   # Entire game — self-contained, no build step required
-```
-
-All CSS, JavaScript, and the word bank are inlined in `index.html`. There are no dependencies beyond a Google Fonts CDN link (the game is fully playable offline if the fonts fall back to system fonts).
-
+Created by Hemant Naik
