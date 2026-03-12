@@ -6,12 +6,15 @@ A fast-paced, browser-based word puzzle where you reassemble 10 scrambled words 
 
 ## 10 Words Game screenshots
 
-<p align="center">
-  <img src="10Words%20-%2001.png" alt="Start screen" width="32%">
-  <img src="10Words%20-%2002.png" alt="Game in progress" width="32%">
-  <img src="10Words%20-%2003.png" alt="Score screen" width="32%">
+<p align="left">
+  <img src="10Words%20-%2001.png" alt="Start screen">
 </p>
-
+<p align="left">
+  <img src="10Words%20-%2002.png" alt="Game in progress">
+</p>
+<p align="left">
+  <img src="10Words%20-%2003.png" alt="Score screen">
+</p>
 ---
 
 ## How to Play
