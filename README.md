@@ -1,56 +1,72 @@
-# 10 WORDS — Hourly Word Puzzle
+# 9 WORDS
 
-A fast-paced, browser-based word puzzle where you reassemble 10 scrambled words against the clock. A new puzzle is generated every hour, shared by all players worldwide via a deterministic seed.
+A daily browser-based word puzzle game. Nine words — each a different length — are broken into fragments and scrambled across the pool. Pick fragments and place them into the correct word slots. Solve all 9 before the timer runs out.
 
 ---
 
-## 10 Words Game screenshots
+## Screenshots
 
 <p align="left">
-  <img src="10Words%20-%2001.png" alt="Game in progress">
+  <img src="9Words%2001.png" alt="9 Words – Start Screen" width="260">
 </p>
+
 <p align="left">
-  <img src="10Words%20-%2002.png" alt="Score screen">
+  <img src="9Words%2002.png" alt="9 Words – In Game" width="260">
 </p>
+
 <p align="left">
-  <img src="10Words%20-%2003.png" alt="Start screen">
+  <img src="9Words%2003.png" alt="9 Words – Score Screen" width="260">
 </p>
+
 ---
 
 ## How to Play
 
-1. **Select a fragment** from the Fragment Pool (click or drag).
-2. **Place it** into an empty slot in the Word Assembly panel.
-3. **Swap** fragments by clicking a filled slot, then clicking another.
-4. **Double-click** a filled slot to return it to the pool.
-5. **Drag and drop** is fully supported — drag fragments directly from the pool into any word slot.
-6. Solve all 10 words before the 10-minute timer runs out.
+1. Click a fragment in the **Fragment Pool** to select it.
+2. Click an empty slot in the **Word Assembly** panel to place it.
+3. Click a filled slot to pick it back up or swap it with another.
+4. Double-click a filled slot to return it to the pool.
+5. Solve all 9 words before the 15-minute timer expires.
 
-### Scoring
+---
 
-| Score | Stars |
-|-------|-------|
-| 1 – 100 | ★☆☆☆☆☆ |
-| 101 – 200 | ★★☆☆☆☆ |
-| 201 – 300 | ★★★☆☆☆ |
-| 301 – 400 | ★★★★☆☆ |
-| 401 – 500 | ★★★★★☆ |
-| 501 – 600 | ★★★★★★ |
+## Scoring
 
-If you solve all 10 words, your score equals the **seconds remaining** on the clock (max 600). If time runs out, your score equals `words solved × 30`.
+| Stars | Score (seconds remaining) |
+|-------|--------------------------|
+| ⭐    | 1 – 100                  |
+| ⭐⭐   | 101 – 200                |
+| ⭐⭐⭐  | 201 – 300                |
+| ⭐⭐⭐⭐ | 301 – 400                |
+| ⭐⭐⭐⭐⭐ | 401 – 500               |
+| ⭐⭐⭐⭐⭐⭐ | 501 – 900             |
 
 ---
 
 ## Features
 
-- **Hourly puzzle seed** — everyone playing in the same hour gets the same 10 words.
-- **10 unique word lengths** — one word per length from 6 to 15 letters, sorted shortest to longest in the assembly panel.
-- **Drag & drop** — drag fragments from the pool directly into word slots; drag filled slots to swap them; drag a filled slot back onto a pool row to return it.
-- **Light & dark theme** — toggle with the ☀/☾ button in the header; preference is saved locally.
-- **Responsive** — works on mobile and desktop; panels stack vertically on small screens.
-- **Social sharing** — share your score to Facebook, Twitter/X, WhatsApp, Reddit, or copy a link.
-- **Confetti** — a small celebration when you solve a word, and a big one when you solve all 10.
+- **9 unique word lengths** — 6 to 14 letters, one word per length
+- **Hourly puzzles** — seeded by date and hour so everyone plays the same puzzle
+- **15-minute timer** — race the clock for a higher score
+- **Drag & drop** — drag fragments from the pool directly into word slots
+- **Light / Dark theme** — toggleable, preference saved to localStorage
+- **Share your result** — Facebook, Twitter / X, WhatsApp, Reddit, or copy link
+- **Mobile friendly** — 5 compact rows on mobile with empty rows auto-collapsing as you progress
+- **No dependencies** — single self-contained `index.html` file
 
 ---
 
-Created by Hemant Naik
+## File Structure
+
+```
+9Words/
+├── index.html       # Complete self-contained game (CSS + JS + word bank)
+├── README.md        # This file
+├── 9Words 01.png    # Screenshot – start screen
+├── 9Words 02.png    # Screenshot – in game
+└── 9Words 03.png    # Screenshot – score screen
+```
+
+---
+
+*Created by Hemant Naik*
