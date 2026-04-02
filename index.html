@@ -14,9 +14,9 @@
   --surface2:  #1a1a24;
   --border:    #252530;
   --border2:   #2e2e3e;
-  --accent:    #c8f53c;
-  --accent2:   #9fca1a;
-  --accent-g:  rgba(200,245,60,0.08);
+  --accent:    #5bc8f5;
+  --accent2:   #1aaada;
+  --accent-g:  rgba(91,200,245,0.08);
   --red:       #ff4d4d;
   --green:     #3ddc84;
   --green-g:   rgba(61,220,132,0.10);
@@ -36,9 +36,9 @@
   --surface2:  #f0efe9;
   --border:    #dddbd2;
   --border2:   #c8c6bb;
-  --accent:    #5a8a00;
-  --accent2:   #4a7200;
-  --accent-g:  rgba(90,138,0,0.08);
+  --accent:    #0077b6;
+  --accent2:   #005f92;
+  --accent-g:  rgba(0,119,182,0.08);
   --red:       #cc2200;
   --green:     #1a8c4e;
   --green-g:   rgba(26,140,78,0.08);
@@ -116,6 +116,10 @@ body{
 .reveal-word{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:4px 8px;border:1px solid var(--border2);color:var(--muted);background:var(--surface2);}
 .reveal-word.got{border-color:var(--green);color:var(--green);background:var(--green-g);}
 
+/* Next puzzle countdown */
+.next-puzzle{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:20px;padding:10px 14px;border:1px solid var(--border);background:var(--surface2);}
+.next-puzzle strong{color:var(--accent2);font-size:14px;display:block;margin-top:4px;letter-spacing:.08em;}
+
 /* Share buttons */
 .share-section{margin-bottom:22px;}
 .share-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
@@ -154,7 +158,7 @@ header{border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:
 /* Timer bar */
 .tbar{height:2px;background:var(--border);}
 .tbar-fill{height:100%;background:var(--accent);width:100%;transition:width 1s linear;}
-[data-theme="dark"] .tbar-fill{box-shadow:0 0 8px rgba(200,245,60,.5);}
+[data-theme="dark"] .tbar-fill{box-shadow:0 0 8px rgba(91,200,245,.5);}
 
 /* ── MAIN ── */
 main{max-width:860px;margin:0 auto;padding:24px 20px 60px;position:relative;z-index:10;}
@@ -182,7 +186,7 @@ main{max-width:860px;margin:0 auto;padding:24px 20px 60px;position:relative;z-in
 /* Tiles */
 .tile{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;padding:6px 10px;background:var(--tile-bg);border:1px solid var(--tile-bdr);color:var(--text);cursor:pointer;user-select:none;transition:all .12s;}
 .tile:hover{background:var(--tile-hvr);border-color:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 14px var(--shadow);}
-.tile.selected{background:var(--accent-g);border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 4px 18px rgba(200,245,60,.18);transform:translateY(-2px);}
+.tile.selected{background:var(--accent-g);border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 4px 18px rgba(91,200,245,.18);transform:translateY(-2px);}
 .tile.dragging{opacity:.35;transform:scale(0.96);}
 
 /* Drag-and-drop targets */
@@ -286,6 +290,7 @@ main{max-width:860px;margin:0 auto;padding:24px 20px 60px;position:relative;z-in
         <button class="share-btn" id="shareCopy">Copy Link</button>
       </div>
     </div>
+    <div class="next-puzzle" id="nextPuzzle">Next puzzle available in<strong id="nextPuzzleTimer">—</strong></div>
     <button class="btn btn-main" id="restartBtn">Play Again</button>
   </div>
 </div>
@@ -504,15 +509,16 @@ let targetSlots = [];
 let solvedWords = new Set();
 let selection   = null;
 let dragState   = null;   // { source:'pool'|'target', fragId, wordIdx?, slotIdx? }
-let timeLeft    = 900;
-let timerRef    = null;
-let gameActive  = false;
+let timeLeft       = 900;
+let timerRef       = null;
+let nextPuzzleRef  = null;
+let gameActive     = false;
 
 // ══════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════
 document.getElementById('startBtn').onclick   = () => { document.getElementById('startOverlay').classList.remove('open'); initGame(); };
-document.getElementById('restartBtn').onclick = () => { document.getElementById('endOverlay').classList.remove('open'); clearInterval(timerRef); initGame(); };
+document.getElementById('restartBtn').onclick = () => { document.getElementById('endOverlay').classList.remove('open'); clearInterval(timerRef); clearInterval(nextPuzzleRef); initGame(); };
 
 function initGame() {
   const seed = getHourlySeed();
@@ -825,6 +831,24 @@ function starsForScore(score) {
 }
 
 // ══════════════════════════════════════════
+// NEXT PUZZLE COUNTDOWN
+// ══════════════════════════════════════════
+function startNextPuzzleCountdown() {
+  clearInterval(nextPuzzleRef);
+  function tick() {
+    const now      = new Date();
+    const nextHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1, 0, 0, 0);
+    const diff     = Math.max(0, Math.floor((nextHour - now) / 1000));
+    const m        = Math.floor(diff / 60);
+    const s        = diff % 60;
+    const el       = document.getElementById('nextPuzzleTimer');
+    if (el) el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  tick();
+  nextPuzzleRef = setInterval(tick, 1000);
+}
+
+// ══════════════════════════════════════════
 // END GAME
 // ══════════════════════════════════════════
 function endGame(won) {
@@ -882,7 +906,7 @@ function endGame(won) {
       });
   };
 
-  setTimeout(() => document.getElementById('endOverlay').classList.add('open'), 800);
+  setTimeout(() => { document.getElementById('endOverlay').classList.add('open'); startNextPuzzleCountdown(); }, 800);
 }
 
 function fmt(s) { const m=Math.floor(s/60),sec=s%60; return m>0?`${m}m ${sec}s`:`${sec}s`; }
@@ -906,7 +930,7 @@ function updateSelStatus() {
 // ══════════════════════════════════════════
 // CONFETTI
 // ══════════════════════════════════════════
-const CC = ['#c8f53c','#3ddc84','#f0a500','#e8e0d0','#60d8f0','#ff6b6b'];
+const CC = ['#5bc8f5','#3ddc84','#f0a500','#e8e0d0','#1aaada','#ff6b6b'];
 function spawnConfetti(n) {
   for (let i = 0; i < n; i++) {
     setTimeout(() => {
